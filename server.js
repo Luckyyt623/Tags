@@ -13,7 +13,7 @@ const tags = {
   tags: [
     {
       id: "india",
-      imageUrl: "https://raw.githubusercontent.com/Luckyyt623/All-images/main/Picsart_25-06-29_19-55-16-551.png",
+      imageUrl: "https://github.com/Luckyyt623/All-images/blob/main/Picsart_25-06-29_19-55-16-551.webp",
       width: 60,
       height: 60,
       leftPos: -30,
