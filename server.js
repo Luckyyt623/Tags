@@ -36,7 +36,7 @@ const tagsDatabase = {
     {
       _id: "684d6204531b8388770f08f9",
       id: 4168,
-      imageUrl: "https://cdn.stellarslither.com/cosmetic/25a632021237be6a0d083bc4c85fcb72b04ad9c539c1afe839117d6c89ecc206.webp",
+      imageUrl: "https://raw.githubusercontent.com/Luckyyt623/All-images/main/Picsart_25-06-29_19-55-16-551.png",
       angle: -90,
       leftPos: 88,
       topPos: 150,
