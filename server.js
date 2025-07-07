@@ -9,131 +9,73 @@ const morgan = require('morgan');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Security and performance middleware
+// Middleware setup
 app.use(helmet());
 app.use(compression());
-app.use(morgan('combined'));
+app.use(morgan('dev')); // Changed to 'dev' for better Render logs
 
-// Enhanced CORS configuration
+// CORS configuration - simplified for Render
 app.use(cors({
-  origin: process.env.CORS_ORIGINS?.split(',') || '*',
+  origin: '*',
   methods: ['GET'],
-  allowedHeaders: ['Content-Type'],
-  maxAge: 86400
+  allowedHeaders: ['Content-Type']
 }));
 
-// Rate limiting
+// Rate limiting - reduced for Render's shared environment
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 50, // Reduced from 100 to 50 for Render
   message: 'Too many requests from this IP, please try again later'
 });
 app.use(limiter);
 
-// Database mock (replace with real DB in production)
+// Database mock - simplified for initial deployment
 const tagsDatabase = {
   tags: [
     {
-      _id: "684d6204531b8388770f08f9",
-      id: 4168,
-      imageUrl: "https://raw.githubusercontent.com/Luckyyt623/All-images/main/Picsart_25-06-29_19-55-16-551.png",
+      id: "default",
+      imageUrl: "https://cdn.stellarslither.com/cosmetic/25a632021237be6a0d083bc4c85fcb72b04ad9c539c1afe839117d6c89ecc206.webp",
       angle: -90,
       leftPos: 88,
       topPos: 150,
       width: 175,
       height: 175,
       borderColor: "#FFD700",
-      borderShadow: "#000000",
-      cacheMaxAge: 86400 // 24 hours
-    },
-    // Add more tags as needed
+      borderShadow: "#000000"
+    }
   ],
   metadata: {
     lastUpdated: new Date().toISOString(),
-    version: "1.0.0",
-    ttl: 3600 // Default cache duration
+    version: "1.0.0"
   }
 };
 
-// API Endpoints
-app.get('/api/v1/tags', (req, res) => {
+// API Endpoints - simplified caching
+app.get('/api/get-tags', (req, res) => {
   try {
-    // Check for If-None-Match header for cache validation
-    const clientETag = req.headers['if-none-match'];
-    const serverETag = `W/"${tagsDatabase.metadata.lastUpdated}"`;
-    
-    if (clientETag === serverETag) {
-      return res.status(304).end(); // Not Modified
-    }
-
-    res.set({
-      'Content-Type': 'application/json',
-      'Cache-Control': `public, max-age=${tagsDatabase.metadata.ttl}`,
-      'ETag': serverETag,
-      'Last-Modified': tagsDatabase.metadata.lastUpdated
-    });
-
-    res.status(200).json({
-      success: true,
-      data: tagsDatabase.tags,
-      metadata: tagsDatabase.metadata
-    });
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.status(200).json(tagsDatabase);
   } catch (error) {
-    console.error('Error fetching tags:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error'
-    });
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-    version: process.env.npm_package_version
-  });
+  res.status(200).json({ status: 'ok' });
 });
 
-// Error handling
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    error: 'Internal server error',
-    message: err.message
-  });
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'Endpoint not found'
-  });
+// Basic error handling
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled rejection:', err);
 });
 
-// Server startup
-const server = app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`🌐 Tags endpoint: http://localhost:${PORT}/api/v1/tags`);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received. Shutting down gracefully...');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received. Shutting down gracefully...');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
 });
